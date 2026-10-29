@@ -1,6 +1,22 @@
+# Node modules
 node_modules/
-/dist/
-/.env
-/.DS_Store
+
+# Build output
+dist/
+react/dist/
+
+# Vite cache
+.vite/
+
+# IDE/editor files
 .vscode/
 .idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
