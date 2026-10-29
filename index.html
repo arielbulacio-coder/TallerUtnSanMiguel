@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang= es>
+<head>
+  <meta charset=UTF-8 />
+  <meta name=viewport content=width=device-width initial-scale=1.0 />
+  <title>Plano Taller UTN San Miguel</title>
+  <link rel=stylesheet href=styles.css />
+<link rel="stylesheet" href="sidebar.css" />
+</head>
+<body>
+  <h1>Plano del Taller UTN (10 m × 60 m)</h1>
+  <div id=canvas-container>
+    <svg id=floorplan viewBox=0 0 1000 600 xmlns=http://www.w3.org/2000/svg>
+      <rect width=1000 height=600 fill=#f0f0f0 stroke=#999 stroke-width=2 />
+      <g id=grid stroke=#ddd stroke-width=1>
+        <g id=v-lines>
+          <line x1=100 y1=0 x2=100 y2=600 />
+          <line x1=200 y1=0 x2=200 y2=600 />
+          <line x1=300 y1=0 x2=300 y2=600 />
+          <line x1=400 y1=0 x2=400 y2=600 />
+          <line x1=500 y1=0 x2=500 y2=600 />
+          <line x1=600 y1=0 x2=600 y2=600 />
+          <line x1=700 y1=0 x2=700 y2=600 />
+          <line x1=800 y1=0 x2=800 y2=600 />
+          <line x1=900 y1=0 x2=900 y2=600 />
+        </g>
+        <g id=h-lines>
+          <line x1=0 y1=100 x2=1000 y2=100 />
+          <line x1=0 y1=200 x2=1000 y2=200 />
+          <line x1=0 y1=300 x2=1000 y2=300 />
+          <line x1=0 y1=400 x2=1000 y2=400 />
+          <line x1=0 y1=500 x2=1000 y2=500 />
+        </g>
+      </g>
+      <g id=objects>
+        <rect class=draggable data-type=mesa x=150 y=150 width=60 height=100 fill=#cfe2f3 stroke=#2c6e91 stroke-width=2 />
+        <rect class=draggable data-type=banco x=300 y=200 width=40 height=200 fill=#d9ead3 stroke=#38761d stroke-width=2 />
+        <rect class=draggable data-type=pizarron x=500 y=100 width=120 height=30 fill=#fff2cc stroke=#b45f06 stroke-width=2 />
+        <rect class=draggable data-type=panel x=800 y=400 width=80 height=80 fill=#f4cccc stroke=#990000 stroke-width=2 />
+      </g>
+    </svg>
+  </div>
+  <div id="sidebar">
+    <h2>Controles</h2>
+    <button class="sidebar-btn" id="add-mesa">Añadir mesa</button>
+    <button class="sidebar-btn" id="add-banco">Añadir banco</button>
+    <button class="sidebar-btn" id="add-pizarron">Añadir pizarrón</button>
+    <button class="sidebar-btn" id="add-panel">Añadir panel eléctrico</button>
+    <button class="sidebar-btn" id="reset">Restablecer</button>
+  </div>
+<script>
+/* Inline script for floorplan */
+const svg = document.getElementById('floorplan');
+const objects = document.getElementById('objects');
+let viewBox = {x:0,y:0,w:1000,h:600};
+let isPanning=false, start={x:0,y:0}, dragTarget=null, dragOffset={x:0,y:0};
+// Zoom
+svg.addEventListener('wheel', e=>{e.preventDefault(); const scale=e.deltaY>0?1.1:0.9; const mx=e.offsetX, my=e.offsetY; const wx=viewBox.x+(mx/svg.clientWidth)*viewBox.w; const wy=viewBox.y+(my/svg.clientHeight)*viewBox.h; viewBox.w*=scale; viewBox.h*=scale; viewBox.x=wx-(mx/svg.clientWidth)*viewBox.w; viewBox.y=wy-(my/svg.clientHeight)*viewBox.h; update();});
+function update(){svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`); save();}
+// Pan
+svg.addEventListener('mousedown', e=>{if(e.target===svg){isPanning=true; start={x:e.clientX,y:e.clientY};}});
+svg.addEventListener('mousemove', e=>{if(isPanning){const dx=((start.x-e.clientX)/svg.clientWidth)*viewBox.w; const dy=((start.y-e.clientY)/svg.clientHeight)*viewBox.h; viewBox.x+=dx; viewBox.y+=dy; start={x:e.clientX,y:e.clientY}; update();}});
+svg.addEventListener('mouseup',()=>isPanning=false);
+svg.addEventListener('mouseleave',()=>isPanning=false);
+// Drag objects
+objects.addEventListener('mousedown', e=>{if(e.target.classList.contains('draggable')){e.stopPropagation(); dragTarget=e.target; const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; const cur=pt.matrixTransform(svg.getScreenCTM().inverse()); dragOffset.x=cur.x-parseFloat(dragTarget.getAttribute('x')); dragOffset.y=cur.y-parseFloat(dragTarget.getAttribute('y'));}});
+svg.addEventListener('mousemove', e=>{if(dragTarget){const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; const cur=pt.matrixTransform(svg.getScreenCTM().inverse()); dragTarget.setAttribute('x',cur.x-dragOffset.x); dragTarget.setAttribute('y',cur.y-dragOffset.y);}});
+svg.addEventListener('mouseup',()=>dragTarget=null);
+svg.addEventListener('mouseleave',()=>dragTarget=null);
+// Definitions
+const defs = {mesa:{w:60,h:100,fill:'#cfe2f3',stroke:'#2c6e91'},banco:{w:40,h:200,fill:'#d9ead3',stroke:'#38761d'},pizarron:{w:120,h:30,fill:'#fff2cc',stroke:'#b45f06'},panel:{w:80,h:80,fill:'#f4cccc',stroke:'#990000'}};
+function add(type){const d=defs[type]; const r=document.createElementNS('http://www.w3.org/2000/svg','rect'); r.setAttribute('class','draggable'); r.setAttribute('data-type',type); r.setAttribute('x',100); r.setAttribute('y',100); r.setAttribute('width',d.w); r.setAttribute('height',d.h); r.setAttribute('fill',d.fill); r.setAttribute('stroke',d.stroke); r.setAttribute('stroke-width',2); objects.appendChild(r); save();}
+function reset(){while(objects.lastChild) objects.removeChild(objects.lastChild); save();}
+function save(){const arr=[]; objects.querySelectorAll('.draggable').forEach(el=>{arr.push({type:el.getAttribute('data-type'),x:+el.getAttribute('x'),y:+el.getAttribute('y')});}); localStorage.setItem('utnLayout',JSON.stringify(arr));}
+function load(){const raw=localStorage.getItem('utnLayout'); if(!raw) return; JSON.parse(raw).forEach(it=>{const d=defs[it.type]; const r=document.createElementNS('http://www.w3.org/2000/svg','rect'); r.setAttribute('class','draggable'); r.setAttribute('data-type',it.type); r.setAttribute('x',it.x); r.setAttribute('y',it.y); r.setAttribute('width',d.w); r.setAttribute('height',d.h); r.setAttribute('fill',d.fill); r.setAttribute('stroke',d.stroke); r.setAttribute('stroke-width',2); objects.appendChild(r);});}
+// Sidebar UI
+document.getElementById('add-mesa')?.addEventListener('click',()=>add('mesa'));
+document.getElementById('add-banco')?.addEventListener('click',()=>add('banco'));
+document.getElementById('add-pizarron')?.addEventListener('click',()=>add('pizarron'));
+document.getElementById('add-panel')?.addEventListener('click',()=>add('panel'));
+document.getElementById('reset')?.addEventListener('click',reset);
+// Login modal
+function showLogin(){const m=document.createElement('div'); m.style='position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;'; m.innerHTML=`<div style="background:#fff;padding:20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2);text-align:center;"><h2>Acceso al Taller</h2><input id="code-input" type="password" placeholder="Código UTN2026" style="font-size:1rem;padding:.5rem;margin-top:.5rem;width:200px;"><br><button id="enter-btn" style="margin-top:1rem;padding:.5rem 1rem;">Entrar</button></div>`; document.body.appendChild(m); document.getElementById('enter-btn').onclick=()=>{if(document.getElementById('code-input').value.trim()==='UTN2026') m.remove(); else alert('Código incorrecto');};}
+window.onload=()=>{showLogin(); load();};
+</script>
+</body>
+</html>

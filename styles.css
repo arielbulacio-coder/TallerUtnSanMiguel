@@ -1,0 +1,6 @@
+﻿body {font-family: 'Inter', sans-serif; margin:0; padding:20px; background:#f8f9fa;}
+h1 {text-align:center; color:#333;}
+#canvas-container {display:flex; justify-content:center; margin-top:20px;}
+svg {border:2px solid #444; background:#fff;}
+.draggable {cursor:move; transition:transform 0.2s;}
+.draggable:hover {stroke:#ff8800; stroke-width:3;}
